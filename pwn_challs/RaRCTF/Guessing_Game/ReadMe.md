@@ -101,7 +101,7 @@ Obviously, one of the first things that I clearly needed to do with this informa
 
 At this point, I realized that I actually could be certain of a bytes value without technically hitting it. By default, my binary search algorithm never hit odd numbers until the very end of a search, on the eigthth guess, at which point I could derive the correct answer anyway without burning a guess. So I modified my algorithm, and now, the odds were reasonably high that I could leak two addresses in one run through the program!
 
-Here is the code to leak the canary alone:
+Here is the code to leak the canary alone. Please note that I know that this is an unusual implementation of a binary search algorithm. This was the best way I could come up with to avoid hitting odd numbers and burning guesses, so while this code is long and ugly, it does work quite reliably:
 ```
 count = 0
 
