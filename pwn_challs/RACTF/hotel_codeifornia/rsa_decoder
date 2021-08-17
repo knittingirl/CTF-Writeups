@@ -1,0 +1,26 @@
+from Crypto.PublicKey import RSA
+key_encoded='''-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjlb4vwt0v4fsmVqR4Ilu
+goQNAJuE9Xckwrq3Hr723rKsdeVUBV05Hv9Q7DqGrkuohGevbD3cptFaCKiPAeLJ
+ZLjm8WZ4a5zj3WCPZaStTCmAZ9MUh7ykenpJ3RrYY0x7hy7JJ5D/WqmzV7tkUjqm
+8miV401PI7tKeJoZXPbfFDLBEfhjn5I3oTElq/cjvJDJlzaliJ4uqhs8XMUhcN1D
+CmiGgsv/QaQ7GCMeUVSuUtU1JunTAvyEsEXFKhpVIBjzP2xkaDGqNHZ95upTM53C
+SwnLRBwSQ0oky4bu3Z5GxxiLQ3Cd4jYQJoMKGySbtMZ6BAhNeg21ClkWdixBudoZ
+AwIDAQAB
+-----END PUBLIC KEY-----'''
+
+
+pubkey = RSA.importKey(key_encoded)
+print(pubkey.n)
+print(pubkey.e)
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+
+pubkey2 = serialization.load_pem_public_key(
+    key_encoded.encode('ascii'),
+    backend=default_backend()
+)
+
+print(pubkey2.public_numbers().n)
+print(pubkey2.public_numbers().e)
