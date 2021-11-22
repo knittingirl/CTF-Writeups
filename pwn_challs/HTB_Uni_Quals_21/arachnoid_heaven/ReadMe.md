@@ -60,8 +60,6 @@ When I decompile the code in Ghidra, the main function is straightforward in pro
   lVar1 = (long)(int)arachnoidCount;
   allocated_code = input_name[1];
   arachnoids[lVar1 * 0x10] = *input_name;
-                    /* I have to overwrite this bit, possible by overwriting the defaultCode global
-                        */
   arachnoids[lVar1 * 0x10 + 1] = allocated_code;
   printf("Arachnoid Index: %d\n\n",(ulong)arachnoidCount);
   arachnoidCount = arachnoidCount + 1;
