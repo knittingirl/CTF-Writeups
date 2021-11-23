@@ -97,6 +97,9 @@ knittingirl@piglet:~/CTF/HTB_Uni_Quals_21/peel_back_the_layers/0aec9568b70f59cc1
 librs.so
 
 ```
+
+## Reverse Engineering the .so File
+
 If I run strings on this file, there are some indicators of it being a reverse shell of some kind; there are references to REMOTE_ADDR and REMOTE_PORT, and there is a GOT entry for the execve function.
 ```
 knittingirl@piglet:~/CTF/HTB_Uni_Quals_21/peel_back_the_layers/0aec9568b70f59cc149be9de4d303bc0caf0ed940cd5266671300b2d01e47922/usr/share/lib$ strings -n10 librs.so 
