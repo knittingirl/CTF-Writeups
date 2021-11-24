@@ -12,11 +12,11 @@ The challenge was rated at 2 out of 4 stars, and it was worth 350 points at the 
 
 The more straightforward component is the pcap file, so we can start there. When I open it up in Wireshark, packets 4 and 10 indicate that the file freesteam.exe was downloaded to the victim device over HTTP. File > Export Objects > HTTP gives me a window that I can use to easily extract this file for further analysis. 
 
-![freesteam exe extraction](/home/knittingirl/CTF/HTB_Uni_Quals_21/forensics_strike_back/freesteam_exe_extraction.png)
+![freesteam exe extraction](freesteam_exe_extraction.png)
 
 If I upload the file to VirusTotal online, it is very clearly malware, and the Community tab indicates that it is a component of Cobalt Strike.
 
-![Cobalt Strike VirusTotal](/home/knittingirl/CTF/HTB_Uni_Quals_21/forensics_strike_back/cobalt_virustotal.png)
+![Cobalt Strike VirusTotal](cobalt_virustotal.png)
 
 There is more HTTP traffic in the pcap, but it seems to be encrypted somehow, so it's time to move on to the .dmp file. If I use the file command, I can see that this is a MiniDuMP crash report.
 ```
@@ -200,6 +200,6 @@ payload-b25952a4fd6a97bac3ccc8f2c01b906b.vir: ASCII text, with no line terminato
 ```
 I renamed the pdf file to orders.pdf and opened it up normally. The flag was in cleartext inside.
 
-![Orders.pdf](/home/knittingirl/CTF/HTB_Uni_Quals_21/forensics_strike_back/orders_pdf.png)
+![Orders.pdf](orders_pdf.png)
 
 Thanks for reading!
