@@ -6,7 +6,7 @@ The description for this challenge is as follows:
 
 The challenge was rated at 3 out of 4 stars, and it was worth 450 points at the end with a total of 14 solves.The downloadables for this challenge included a single pcap file. This was a reasonably difficult forensics challenge that included skills like pcap analysis, obfuscated powershell script analysis, and decoding encrypted protocols using scripts.
 
-**TL;DR Solution:** Extract 
+**TL;DR Solution:** Extract ntd.dit and SYSTEM hive files from the pcap based on information derived from an obfuscated powershell script. Extract NTLM hashes from those files, and use them to decrypt WinRM traffic. Then find the flag encoded in base64.
 
 
 ## Extracting NTLM Hashes
