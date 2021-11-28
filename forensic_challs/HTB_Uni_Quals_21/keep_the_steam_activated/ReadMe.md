@@ -13,7 +13,7 @@ The challenge was rated at 3 out of 4 stars, and it was worth 450 points at the 
 
 Firstly, one good initial step when dealing with pcap files is to check if any files were transferred over HTTP, since Wireshark provides an easy option for the extraction of such files. Simply go to File > Export Objects > HTTP. The files that seemed especially relevant here were called rev.ps1, n.exe, and drop.ps1. As a result, I saved all of them for further analysis.
 
-![wireshark_file_extraction](/home/knittingirl/CTF/HTB_Uni_Quals_21/forensics_keep_the_steam/wireshark_file_extraction.png)
+![wireshark_file_extraction](wireshark_file_extraction.png)
 
 The rev.ps1 file was relatively obfuscated, as shown below. However, one piece of obfuscated text that stands out is "(("{0}{1}{2}" -f '192.168','.1','.9'),4443)". This appears to be targetting the attacker machine's IP address of 192.168.1.9, on what we can assume is port 4443.
 ```
@@ -21,11 +21,11 @@ sv ('8mxc'+'p')  ([tyPe]("{1}{0}{2}" -f 't.encOdi','tex','nG') ) ;${ClI`E`Nt} = 
 ```
 If I use the filter "tcp.port == 4443" in Wireshark, I can see that there is a lot of TCP traffic here. If I right-click one of these packets and select Follow > TCP stream, I can view a plaintext representation of the conversation that occurred over these packets. Of particular interest is the fact that the files ntds.dit and the SYSTEM hive seem to have been encoded in base 64, then transferred back to the attacker machine using port 8080 with the n.exe file. As a side-note, I determined that n.exe seems to be a version of netcat by simply uploading it to VirusTotal.
 
-![system_ntds_transfer_conversation](/home/knittingirl/CTF/HTB_Uni_Quals_21/forensics_keep_the_steam/system_ntds_transfer_conversation.png)
+![system_ntds_transfer_conversation](system_ntds_transfer_conversation.png)
 
 Now I can use the filter "tcp.port == 8080" and follow the conversations again like described above. There are two separate conversations, both of which seem to be base64 strings with "-----BEGIN CERTIFICATE-----" at the top and "-----END CERTIFICATE-----" at the end. 
 
-![ntds_b64encoded](/home/knittingirl/CTF/HTB_Uni_Quals_21/forensics_keep_the_steam/ntds_b64encoded.png)
+![ntds_b64encoded](ntds_b64encoded.png)
 
 I decoded both files by using the base64 utility in the Linux command line. The workflow here is to use the "Save as" option at the bottom of the followed TCP window to save a text file version of each stream, open the files up in a text editor to cut of the plaintext certificate lines, then run them through the base64 utility while piping the outputs to appropriately named files. Now I just need to figure out where to go from here.
 ```
@@ -90,7 +90,7 @@ I spent several hours attempted to decrypt the encrypted SMB3 traffic at the beg
 
 When you view the traffic immediately after the bas64 encoded SYSTEM hive has finished transmitting over port 8080, you can see encrypted winrm traffic that can hopefully be decrypted to view the flag.
 
-![winrm_traffic](/home/knittingirl/CTF/HTB_Uni_Quals_21/forensics_keep_the_steam/winrm_traffic.png)
+![winrm_traffic](winrm_traffic.png)
 
 I was able to find a script online that can purportedly decrypt winrm traffic if given the NT  hash of the password, which seems perfect given what we have. However, when I attempted to run it, it failed. Ultimately, the issue seems to have come down to a failure to properly parse the pcap capture data as bytes. A team member made adjustments on line 208, where "include_raw=True, use_json=True" was added, and line 248, where "file_data = cap.http.file_data.binary_value" was changed to "file_data = cap.http.file_data_raw[0].binary_value". The output was very long, and it started like this: 
 ```
