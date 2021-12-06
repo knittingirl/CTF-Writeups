@@ -83,7 +83,7 @@ Fortunately, the gadget at 0x0000000000401007 will provide me with both a pop ra
 
 The main hiccup to calling execve typically that it needs to called with a pointer to the string command that we want to execute, which is most typically /bin/sh. Fortunately, the exports section in ghidra references binsh; if I click on it, then click the address that it is referencing, I can see the string /bin/sh in a static location that I can easily load into rdi. I could also find this information by looking at the defined strings tab, again within Ghidra. 
 
-![freesteam exe extraction](/home/knittingirl/CTF/metaCTF21/binsh_string_ghidra.png)
+![binsh_string_ghidra](binsh_string_ghidra.png)
 
 ## Writing the Exploit:
 
