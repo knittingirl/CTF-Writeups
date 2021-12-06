@@ -1,4 +1,4 @@
-# Small Boi
+# Little Boi
 
 The description for this challenge is as follows:
 
