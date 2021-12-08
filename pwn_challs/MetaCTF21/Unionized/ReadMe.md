@@ -363,7 +363,7 @@ target.interactive()
 ```
 At this point, I have two options for my approach. I could attempt a partial overwrite of the print function pointer with the win function; however, the low two bytes of the functions differ, and only the low three nibbles of win will be known between executions, so I will have to guess one nibble for 1/16 odds of success. This is not bad, and if I did not have an alternative idea, I would have implemented this.
 
-However, I realized that in addition to an arbitrary write, I should be able to get an arbitrary read. I can simply use the string to char to string method to input a string of length zero to the heap offset that contains the display_string address, then use the display option to read that unedited address. I use this to get a PIE leak and find the win function's address, and from there, I can write the win function to display_string address. 
+However, I realized that in addition to an arbitrary write, I should be able to get an arbitrary read. I can simply use the string to char to string method to input a string of length zero to the heap offset that contains the display_string address, then use the display option to read that unedited address. I use this to get a PIE leak and find the win function's address, and from there, I can write the win function to the print pointer, overwriting the display_string address. 
 
 # Writing the Exploit
 
