@@ -1,0 +1,1 @@
+This is a set of writeups based on the challenges in winja CTF, from Wicked6 2022. The competition was a lot of fun, and I wanted to provide writeups of the challenges that I was able to solve. These challenges are all pretty beginner-friendly, span a variety of categories, and I have provided the challenge files if you would like to play along at home!
