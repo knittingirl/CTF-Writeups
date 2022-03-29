@@ -8,7 +8,7 @@ This was the easiest challenge in the reverse engineering category, and it was w
 
 My write-up will mostly focus on static analysis in Ghidra, but there's obviously a lot of different ways that you could go about this!
 
-## Solving up the Challenge:
+## Getting the First Password with ltrace:
 
 Typically, the first step when presented with an executable file in a challenge is to actually run said file. Here, we can see that the program asks for a password, checks it, and exits out if it is incorrect.
 ```
@@ -26,6 +26,8 @@ strncmp("aaaaaaaaaaa", "radare2", 140721297185998)                        = -17
 printf("Incorrect password!! Exiting...")                                 = 31
 Incorrect password!! Exiting...+++ exited (status 31) +++
 ```
+## Getting the Other Two Passwords with Ghidra
+
 Unfortunately, the second password does not seem quite so easy to derive, so at this point, we can move on to looking at the program in Ghidra. The program was not compiled with debug symbols, so there is a little bit of extra work involved in finding the main function. Basically, a pretty reliable technique for Linux binaries is to open up the entry() function. One of the main activities should be a call to __libc_start_main(), in which the first argument is a function pointer. That function pointer should correspond to the main() function, so in this case, we now know that FUN_00101155 corresponds to main and can be relabelled as such.
 ```
 void entry(undefined8 param_1,undefined8 param_2,undefined8 param_3)
