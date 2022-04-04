@@ -8,7 +8,7 @@ The description for this challenge was as follows:
 
 This was considered a hard challenge, and it was worth 375 points at the end of the competition. It uses the same binary and netcat connection as the Vader challenge, and I would recommend reading my writeup of that challenge as a pre-requisite for this one: https://github.com/knittingirl/CTF-Writeups/tree/main/pwn_challs/space_heroes_22/vader. As an aside, the solution presented for this challenge also doubles as an alternative valid solution to Vader.
 
-**TL;DR Solution:** Decide that ret2libc is probably the most straightforward path to vicory. Leak libc addresses from the GOT, use them to identity the library being used, then calculate the offsets to the system function and a "/bin/sh" string in order to pop a shell.
+**TL;DR Solution:** Decide that ret2libc is probably the most straightforward path to victory. Leak libc addresses from the GOT, use them to identity the library being used, then calculate the offsets to the system function and a "/bin/sh" string in order to pop a shell.
 
 ## Deciding on an Approach
 
