@@ -11,7 +11,7 @@ The description for this challenge is as follows:
 This was one of only two challenges in the competition worth 1000 points, and as such, was one of the hardest challenges. The main challenge was the use of the s390 architecture on a binary that would otherwise be straightforward to exploit; this meant that documentation was sparse, a lot of traditional tooling worked badly or not at all, and a significant amount of time went into trying things out and watching the results in a debugger in an attempt to diagnose what was going wrong.
 
 
-**TL;DR Solution:** Note the presence of both a significant buffer overflow and a format string vulnerability. IMPROVE HERE
+**TL;DR Solution:** Note the presence of both a significant buffer overflow and a format string vulnerability. Determine that r11 and r15 registers can be controlled by the overflow and seem similar to rbp and rsp, and use this fact to jump back just befor the read call, set the address to read to to the GOT, and overwrote the GOT tables based on a libc leak from the format string vulnerability. By ensuring that the start of my input is "/bin/sh\x00" and setting printf's entry to system, you can get a shell.
 
 ## Gathering Information
 
@@ -386,7 +386,7 @@ gef➤  x/10gx 0x1002008
 0x1002038:	0x0000000000000000	0x0000000000000000
 0x1002048 <completed.1>:	0x0000000000000000	0x0000000000000000
 ```
-My plan is to have the start of my input be /bin/sh\x00 so that whatever I overwrite printf with has that as its first argument, so the read GOT entry is getting overwritten with that string. The next entry is printf itself, which I will be overwriting with either execve or system, whatever works. I can get the address of these functions based on the format string libc leak. Finally, I opted to overwrite puts to be portions of main() shortly before the printf call, which means I get to avoid the XORing operation and not mess with my potentially fragile stack. This gets appended to the end up my existing script:
+My plan is to have the start of my input be /bin/sh\x00 so that whatever I overwrite printf with has that as its first argument, so the read GOT entry is getting overwritten with that string. The next entry is printf itself, which I will be overwriting with either execve or system, whatever works. I can get the address of these functions based on the format string libc leak. Finally, I opted to overwrite puts to be portions of main() shortly before the printf call, which means I get to avoid the XORing operation and not mess with my potentially fragile fake stack more than is necessary. The following gets appended to the end up my existing script:
 ```
 libc = ELF('bin/libc.so.6')
 
