@@ -34,7 +34,9 @@ Enter flag #1/10 (15s):aaaaaaaaaaaa
 Incorrect!
 ```
 If I decode the string and save it as a png file, the result looks something like this:
+
 ![image](https://raw.githubusercontent.com/knittingirl/CTF-Writeups/main/reversing_challs/UIUCTF22/Pierated%20Art/piet_sample.png)
+
 The image looks mostly normal, but with some blocks of bright colors interspersed throughout. This, combined with challenge's title and description, strongly indicates that Piet code is being used here. To provide some context, Piet code is one of the few esolangs that is represented through visual image data, and Piet code images are visually based on the work of Piet Mondrian. 
 
 To check if this is actually Piet, the lowest effort solution is to use a web interpreter. The main web interpreter is available here: http://www.bertnase.de/npiet/npiet-execute.php And the results of running the sample image through that tool indicates that a program asking for a flag to be entered, so the next step is to find the flag!
