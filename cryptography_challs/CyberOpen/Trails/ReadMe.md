@@ -3,6 +3,8 @@
 ### Acknowledgements: 
 I did not solve this challenge during the live event, so I was able to benefit from a small amount of discussion that had occurred within the Discord immediately following the end of the challenge. Ratman's comments were particularly helpful in pointing me in the direction of differential trails. I also would like to credit the paper "A Tutorial on Linear and Differential Cryptanalysis" by Howard M. Heys for providing a lot of help in understanding this topic and giving me a verbal framework for key extraction.
 
+This writeup also includes an alternate explanation at the end by sky/Teddy Heinen, who managed to sidestep a lot of the cryptographic concepts and extract the flag using the reverse-engineering Python module z3. Please read through to the end to see that!
+
 The description for this challenge is as follows:
 
 *Look! I wrote my own cryptographic code! I bet you can't recover the key. I even give you the source code! (service.py)*
@@ -428,3 +430,127 @@ print(hex(partial ^ pt))
 And I got a result of 0x7331. This gives us a final flag of 's1mpl3?!?!', and the challenge is complete.
 
 Thanks for reading!
+
+## Z3-Approach by Sky/Teddy Heinen
+
+I don't know cryptography so I immediately jumped for my beloved z3. Although the model came together without too much trouble, I realized that it wouldn't work as-is because a single block did not contain enough information to accurately reverse the flag/key. Although I could safely assume that combining every block in the output would be sufficient to reverse the key, this was too much information for z3 to handle (i walked off and got food and it didn't finish idk when it would have). My hope was that a subset of the block pairs would be sufficient to reverse the key. I tried a number of strategies to pick this subset. 
+
+* add a block at a time in order -- this did not work; constraint set grew too fast and slowed down before the flag could be found
+* add a block at a time in order, popping off new constraints if it did not give us a different flag -- this did not work; not sure why but it still slowed down too fast
+* adding blocks in a random order and praying i got them in an order that worked -- this ended up being the strategy i used to get the flag.  tl;dr just get lucky lol
+
+```
+from z3 import *
+import time
+from random import shuffle,seed
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+
+def flatten(l):
+    return [item for sublist in l for item in sublist]
+
+def binary(hex):
+    return bin(int(hex, 16))[2:].zfill(len(hex) * 4)
+
+c_sbox = [1, 5, 15, 2, 14, 8, 0, 9, 10, 3, 4, 12, 13, 7, 11, 6]
+
+pbox = [0x00, 0x04, 0x08, 0x0c, 0x01, 0x05, 0x09, 0x0d,
+        0x02, 0x06, 0x0a, 0x0e, 0x03, 0x07, 0x0b, 0x0f]
+
+sbox = Array("sbox", BitVecSort(4), BitVecSort(4))
+
+set_param("parallel.enable", True)
+
+s = Solver()
+
+for i in range(16):
+	s.add(sbox[i] == c_sbox[i])
+
+flag = [[BitVec(f"flag_{x}_{y}", 1) for x in range(16)] for y in range(5)]
+
+
+for j in range(5): # flag is known to be ASCII
+	s.add(flag[j][0] == 0)
+	s.add(flag[j][8] == 0)
+
+# for i in range(16):
+# 	for j in range(5):
+# 		s.add(flag[j][i] == 1)
+
+def add_block(s, in_block, out_block, ctr):
+
+	init_state = [BitVec(f"init_stage_{x}_{ctr}", 1) for x in range(16)]
+	fin_state = [BitVec(f"fin_stage_{x}_{ctr}", 1) for x in range(16)]
+
+	"""
+	 transposes 4 1-bit BitVecs into a 4-bit BitVec
+	 1,0,1,0 becomes 0b1010
+	"""
+	def p4(a,b,c,d):
+		return Concat(a,b,c,d)
+
+	"""
+	tranposes 1 4-bit BitVec into 4 1-bit BitVecs
+	0b1010 becomes 0,1,0,1
+	"""
+	def u4(x):
+		return Extract(3,3,x), Extract(2,2,x), Extract(1,1,x), Extract(0,0,x)
+
+	def stage(idx, prev_state):
+		next_stage = []
+		for i in range(16):
+			next_stage.append(prev_state[i] ^ flag[idx][i])
+		stage_2 = [sbox[p4(a,b,c,d)] for a,b,c,d in chunks(next_stage,4)]
+		stage_2 = flatten([u4(x) for x in stage_2])
+		if idx == 3:
+			stage_3 = [x ^ flag[idx+1][i] for i, x in enumerate(stage_2)]
+		else:
+			stage_3 = [stage_2[i] for i in pbox]
+		return stage_3
+
+	for idx, x in enumerate(in_block):
+		s.add(init_state[idx] == int(x))
+
+
+	second_stage = stage(0, init_state)
+	third_stage = stage(1, second_stage)
+	fourth_stage = stage(2, third_stage)
+	fifth_stage = stage(3, fourth_stage)
+
+	for idx in range(16):
+		s.add(fifth_stage[idx] == int(out_block[idx]))
+
+with open("output.txt") as f:
+	lines = [x.rstrip() for x in f.readlines()]
+
+ctr = 0
+g = 0
+start = time.time()
+
+
+order = list(range(0,8192,2))
+shuffle(order)
+for i in order:
+	print(f"checking idx[{i}]... {time.time()-start} since start")
+
+	inp = binary(lines[i].split(": ")[1])
+	outp = lines[i+1]
+
+	for in_block, out_block in zip(chunks(inp, 16), chunks(outp, 16)):
+		add_block(s, in_block, out_block, ctr)
+		ctr += 1
+	s.push()
+	# hit that low-hanging fruit optimization
+	# push forces z3 to use a solver which can be done incrementally which allows me to add additional constraints (new block pairs) and solve without redoing work
+	if s.check() == sat:
+		model = s.model()
+		trial_flag = "".join(["".join([str(model[flag[y][x]].as_long()) for x in range(16)]) for y in range(5)])
+		ascii_flag = "".join([chr(int(x,2)) for x in chunks(trial_flag, 8)]).encode()
+		print(f"best guess for flag is {ascii_flag}")
+	else:
+		print("unsat :(")
+```
+
