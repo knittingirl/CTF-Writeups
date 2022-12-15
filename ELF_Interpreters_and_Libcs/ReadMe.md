@@ -18,3 +18,7 @@ Or on the command line:
 ```
 LD_PRELOAD=libc.so.6 ./my_binary
 ```
+Or you can dispense with the need for LD_PRELOAD entirely with patchelf and the replace-needed option:
+```
+patchelf my_binary --replace-needed libc.so.6 libc-2.27.so
+```
