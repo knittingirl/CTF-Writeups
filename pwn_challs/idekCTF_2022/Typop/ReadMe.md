@@ -8,7 +8,7 @@ The description for this challenge is as follows:
 
 This was one of the easiest challenges in the CTF, with 155 solves. It was worth 408 points at the end of the CTF. It was ultimately fairly simple to complete with a background knowledge of general pwn techniques.
 
-**TL;DR Solution:** Use a non-null-terminated string input to print out information on the stack, starting with the canary. Then do a single-byte partial overwrite to bypass PIE and return partway earlier in the main function to call getFeedback again, and get a PIE leak on the second attempt. Finally, you can either use the existing win function and use ret2csu to control the rdx gadget and print the flag, or just use ret2libc to get a full shell and ignore the win function.
+**TL;DR Solution:** Use a non-null-terminated string input to print out information on the stack, starting with the canary. Then do a single-byte partial overwrite to bypass PIE and return earlier in the main function to call getFeedback again, and get a PIE leak on the second attempt. Finally, you can either use the existing win function and use ret2csu to control the rdx gadget and print the flag, or just use ret2libc to get a full shell and ignore the win function.
 
 ## Setup Notes:
 
