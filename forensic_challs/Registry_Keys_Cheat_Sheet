@@ -1,0 +1,7 @@
+# Registry_Keys_Cheat_Sheet
+
+I would just like to keep track of the registry keys that come up more frequently in CTFs. I'll try to update this over time
+
+Hardware\Description\System\CentralProcessor\0 gives us the CPU type
+System\ControlSet001\Control\ComputerName\ComputerName gives us computer name
+Software\Microsoft\Windows\CurrentVersion\Run to get Autoruns and look for persistence
