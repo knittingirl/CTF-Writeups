@@ -6,6 +6,8 @@ The description for this challenge is as follows:
 
 The challenge included a netcat connection, a copy of the binary file, the libc file, and the Dockerfile. This was a reasonably straightforward challenge that required the player to work around PIE via partial overwrite, as well as perform a successful ret2libc attack. The main "twist" to this challenge is the fact that the binary was compiled on a system using libc 2.35, which, among other security improvements, typically compiles binaries without some of the more convenient gadgets for ROP-based attacks. 
 
+*Side-Note"* The challenge binary I've uploaded here is the one used originally in the challenges. The echo2 binary has had patchelf applied to it in order to use the provided libc file and interpreter, assuming that they are downloaded and all placed in the same directory. I also reference echo2 in my solve script.
+
 **TL;DR Solution:** Reverse-engineer the program to determine that the user controls the length of input onto the stack without any sort of bounds check, allowing and overflow. By controlling the length of input, the return pointer can be partially overflowed with one or more arbitrary bytes, without required nulls or newlines. Since the payload is also printed, a partial overflow into the return pointer can be used to return back into an earlier part of the main function, and that return pointer can also be printed to console, leaking the PIE base. On the next pass, since rdi is already set to an address containing a libc address, we can just create a short ROP chain that calls puts and returns back to echo again to get a libc leak. Then we can just use a onegadget to get a shell!
 
 ## Gathering Information
