@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 }
 ```
 As a quick aside, in a lot of challenges, you would only be provided with the challenge binary. You can still derive source code-like output with a decompiler like Ghidra (this is free and open source), so to give you an idea of what that looks like, here's a screenshot of its output on my machine. It isn't perfect; for instance, the local variable's name isn't reproduced, but this output is still very readable, and the issue with the gets function is readily diagnosable.
-![image](https://github.com/knittingirl/Pre-Published-Writeups/assets/10614967/b9469223-cb8f-4b67-bd93-b95f45f8828b)
+![image](https://github.com/knittingirl/CTF-Writeups/assets/10614967/3fff0461-3016-46f4-9341-18018e90109c)
 
 ## Debugging and Writing an Exploit
 
